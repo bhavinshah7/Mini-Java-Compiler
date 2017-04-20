@@ -8,12 +8,12 @@ public class MethodDecl extends Tree {
 
 	public Type returnType;
 	public IdentifierExpr methodName;
-	public List<ArgDeclaration> argList;
+	public List<ArgDecl> argList;
 	public List<VarDecl> varList;
 	public List<Statement> statList;
 	public Expression returnExpr;
 
-	public MethodDecl(JSymbol jSymbol, Type returnType, IdentifierExpr methodName, List<ArgDeclaration> argList,
+	public MethodDecl(JSymbol jSymbol, Type returnType, IdentifierExpr methodName, List<ArgDecl> argList,
 			List<VarDecl> varList, List<Statement> statList, Expression returnExpr) {
 		super(jSymbol);
 		this.returnType = returnType;
@@ -60,7 +60,7 @@ public class MethodDecl extends Tree {
 		return statList.size();
 	}
 
-	public ArgDeclaration getArgDeclAt(int index) {
+	public ArgDecl getArgDeclAt(int index) {
 		if (index < argList.size()) {
 			return argList.get(index);
 		}

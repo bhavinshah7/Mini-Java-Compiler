@@ -17,6 +17,7 @@ import eminijava.symbol.SymbolTable;
 import eminijava.visitor.BuildSymbolTableVisitor;
 import eminijava.visitor.NameAnalyserTreeVisitor;
 import eminijava.visitor.TreePrinter;
+import eminijava.visitor.TypeAnalyser;
 
 public class Main {
 
@@ -48,12 +49,57 @@ public class Main {
 		}
 			break;
 
+		case "--type": {
+			main.typeAnalysis(argv);
+		}
+			break;
 		default: {
 			System.err.println("Invalid option " + argv[0]);
 		}
 
 		}
 
+	}
+
+	public void typeAnalysis(String argv[]) {
+		for (int i = 1; i < argv.length; i++) {
+			try {
+
+				if (!isFileValid(argv[i])) {
+					continue;
+				}
+
+				Lexer lexer = new Lexer(new FileReader(argv[i]));
+				Parser p = new Parser(lexer);
+				Tree tree = p.parse();
+
+				if (tree != null) {
+					BuildSymbolTableVisitor bstv = new BuildSymbolTableVisitor();
+					bstv.visit((Program) tree);
+
+					SymbolTable st = bstv.getSymTab();
+					NameAnalyserTreeVisitor natv = new NameAnalyserTreeVisitor(st);
+					natv.visit((Program) tree);
+
+					TypeAnalyser ta = new TypeAnalyser(st);
+					ta.visit((Program) tree);
+
+				}
+			} catch (Exception e) {
+				System.err.println(e.getMessage());
+				System.exit(1);
+			} finally {
+				if (SemanticErrors.errorList.size() == 0) {
+					System.out.println("Valid eMiniJava Program");
+				} else {
+					SemanticErrors.sort();
+					for (NameError e : SemanticErrors.errorList) {
+						System.err.println(e);
+					}
+				}
+			}
+
+		}
 	}
 
 	public void prettyPrint(String argv[]) {

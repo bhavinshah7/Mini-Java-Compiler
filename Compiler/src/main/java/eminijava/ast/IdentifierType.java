@@ -34,4 +34,9 @@ public class IdentifierType extends Type {
 		return v.visit(this);
 	}
 
+	@Override
+	public String toString() {
+		return varID;
+	}
+
 }

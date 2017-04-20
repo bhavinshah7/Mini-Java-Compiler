@@ -68,7 +68,7 @@ public interface Visitor<R> {
 
 	public R visit(VarDecl varDeclaration);
 
-	public R visit(ArgDeclaration argDeclaration);
+	public R visit(ArgDecl argDeclaration);
 
 	public R visit(MethodDecl methodDeclaration);
 

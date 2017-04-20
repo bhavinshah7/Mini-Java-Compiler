@@ -2,12 +2,12 @@ package eminijava.ast;
 
 import eminijava.lexer.JSymbol;
 
-public class ArgDeclaration extends VarDecl {
+public class ArgDecl extends VarDecl {
 
 	// Type type;
 	// Identifier id;
 
-	public ArgDeclaration(JSymbol jSymbol, Type type, Identifier id) {
+	public ArgDecl(JSymbol jSymbol, Type type, Identifier id) {
 		super(jSymbol, type, id);
 		// this.type = type;
 		// this.id = id;

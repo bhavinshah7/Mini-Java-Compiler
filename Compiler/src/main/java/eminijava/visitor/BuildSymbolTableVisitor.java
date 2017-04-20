@@ -1,7 +1,7 @@
 package eminijava.visitor;
 
 import eminijava.ast.And;
-import eminijava.ast.ArgDeclaration;
+import eminijava.ast.ArgDecl;
 import eminijava.ast.ArrayAssign;
 import eminijava.ast.Assign;
 import eminijava.ast.Block;
@@ -233,26 +233,22 @@ public class BuildSymbolTableVisitor implements Visitor<Type> {
 
 	@Override
 	public Type visit(IntType intType) {
-		// TODO Auto-generated method stub
-		return null;
+		return intType;
 	}
 
 	@Override
 	public Type visit(StringType stringType) {
-		// TODO Auto-generated method stub
-		return null;
+		return stringType;
 	}
 
 	@Override
 	public Type visit(BooleanType booleanType) {
-		// TODO Auto-generated method stub
-		return null;
+		return booleanType;
 	}
 
 	@Override
 	public Type visit(IntArrayType intArrayType) {
-		// TODO Auto-generated method stub
-		return null;
+		return intArrayType;
 	}
 
 	@Override
@@ -266,7 +262,7 @@ public class BuildSymbolTableVisitor implements Visitor<Type> {
 					"main class " + id + " cannot be used as a type in class " + currClass.getId());
 		}
 
-		return null;
+		return refType;
 	}
 
 	@Override
@@ -294,7 +290,7 @@ public class BuildSymbolTableVisitor implements Visitor<Type> {
 	}
 
 	@Override
-	public Type visit(ArgDeclaration ad) {
+	public Type visit(ArgDecl ad) {
 		Type t = ad.getType().accept(this);
 		String id = ad.getId().getVarID();
 		if (!currMethod.addParam(id, t)) {
@@ -366,7 +362,7 @@ public class BuildSymbolTableVisitor implements Visitor<Type> {
 		}
 
 		for (int i = 0; i < md.getArgListSize(); i++) {
-			ArgDeclaration ad = md.getArgDeclAt(i);
+			ArgDecl ad = md.getArgDeclAt(i);
 			ad.accept(this);
 		}
 

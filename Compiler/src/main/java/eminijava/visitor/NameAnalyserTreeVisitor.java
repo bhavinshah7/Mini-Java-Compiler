@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import eminijava.ast.And;
-import eminijava.ast.ArgDeclaration;
+import eminijava.ast.ArgDecl;
 import eminijava.ast.ArrayAssign;
 import eminijava.ast.Assign;
 import eminijava.ast.Block;
@@ -341,7 +341,7 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 	}
 
 	@Override
-	public Type visit(ArgDeclaration ad) {
+	public Type visit(ArgDecl ad) {
 		/**
 		 * Note: argDeclaration already checked in buildSymbolTable
 		 */
@@ -355,9 +355,9 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 	public Type visit(MethodDecl md) {
 
 		String id = md.getMethodName().getVarID();
-		if (hsMethod.contains(id)) {
+		if (hsMethod.contains(id)) { // Duplicate Method
 			return null;
-		} else { // Duplicate Method
+		} else {
 			hsMethod.add(id);
 		}
 
@@ -539,6 +539,7 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 			vd.accept(this);
 		}
 
+		hsMethod.clear();
 		for (int i = 0; i < cd.getMethodListSize(); i++) {
 			MethodDecl md = cd.getMethodDeclAt(i);
 			md.accept(this);
@@ -574,6 +575,7 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 			vd.accept(this);
 		}
 
+		hsMethod.clear();
 		for (int i = 0; i < cd.getMethodListSize(); i++) {
 			MethodDecl md = cd.getMethodDeclAt(i);
 			md.accept(this);

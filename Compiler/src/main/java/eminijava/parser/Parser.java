@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eminijava.ast.And;
-import eminijava.ast.ArgDeclaration;
+import eminijava.ast.ArgDecl;
 import eminijava.ast.ArrayAssign;
 import eminijava.ast.Assign;
 import eminijava.ast.Block;
@@ -214,7 +214,7 @@ public class Parser {
 		}
 		eat(Token.ID);
 		eat(Token.LPAREN);
-		List<ArgDeclaration> argList = new ArrayList<>();
+		List<ArgDecl> argList = new ArrayList<>();
 		if (symbol.token != Token.RPAREN) {
 			argList.add(parseArgument());
 
@@ -273,14 +273,14 @@ public class Parser {
 		return method;
 	}
 
-	public ArgDeclaration parseArgument() throws ParseException {
+	public ArgDecl parseArgument() throws ParseException {
 		Type argType = parseType();
 		Identifier argId = null;
 		if (symbol.token == Token.ID) {
 			argId = new Identifier(symbol, (String) symbol.getValue());
 		}
 		eat(Token.ID);
-		ArgDeclaration var = new ArgDeclaration(argId.getSymbol(), argType, argId);
+		ArgDecl var = new ArgDecl(argId.getSymbol(), argType, argId);
 		return var;
 	}
 

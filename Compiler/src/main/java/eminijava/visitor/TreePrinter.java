@@ -1,7 +1,7 @@
 package eminijava.visitor;
 
 import eminijava.ast.And;
-import eminijava.ast.ArgDeclaration;
+import eminijava.ast.ArgDecl;
 import eminijava.ast.ArrayAssign;
 import eminijava.ast.Assign;
 import eminijava.ast.Block;
@@ -273,7 +273,7 @@ public class TreePrinter implements Visitor<String> {
 	}
 
 	@Override
-	public String visit(ArgDeclaration ad) {
+	public String visit(ArgDecl ad) {
 		return ad.getType().accept(this) + " " + ad.getId().accept(this);
 	}
 
@@ -284,7 +284,7 @@ public class TreePrinter implements Visitor<String> {
 		sb.append(" " + md.getMethodName().accept(this) + "(");
 
 		for (int i = 0; i < md.getArgListSize(); i++) {
-			ArgDeclaration ad = md.getArgDeclAt(i);
+			ArgDecl ad = md.getArgDeclAt(i);
 			sb.append(ad.accept(this));
 			if (i != md.getArgListSize() - 1) {
 				sb.append(", ");

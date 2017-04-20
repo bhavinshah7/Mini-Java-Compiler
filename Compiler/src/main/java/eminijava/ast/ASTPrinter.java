@@ -207,7 +207,7 @@ public class ASTPrinter implements Visitor<String> {
 	}
 
 	@Override
-	public String visit(ArgDeclaration argDecl) {
+	public String visit(ArgDecl argDecl) {
 		return "(" + argDecl.type.accept(this) + " " + argDecl.id.accept(this) + ")";
 	}
 
@@ -218,7 +218,7 @@ public class ASTPrinter implements Visitor<String> {
 				+ methodDecl.methodName.accept(this) + " ");
 
 		sb.append("(TY-ID-LIST ");
-		for (ArgDeclaration arg : methodDecl.argList) {
+		for (ArgDecl arg : methodDecl.argList) {
 			sb.append(arg.accept(this));
 		}
 		sb.append(")\n");

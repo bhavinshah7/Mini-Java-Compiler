@@ -4,6 +4,10 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Hashtable;
 
+import eminijava.ast.BooleanType;
+import eminijava.ast.IdentifierType;
+import eminijava.ast.IntArrayType;
+import eminijava.ast.IntType;
 import eminijava.ast.Type;
 
 public class SymbolTable {
@@ -111,5 +115,69 @@ public class SymbolTable {
 		} else {
 			return m.type();
 		}
+	}
+
+	public boolean compareTypes(Type t1, Type t2) {
+
+		if (t1 == null || t2 == null) {
+			return false;
+		}
+
+		if (t1 instanceof IntType && t2 instanceof IntType) {
+			return true;
+		}
+		if (t1 instanceof BooleanType && t2 instanceof BooleanType) {
+			return true;
+		}
+		if (t1 instanceof IntArrayType && t2 instanceof IntArrayType) {
+			return true;
+		}
+		if (t1 instanceof IdentifierType && t2 instanceof IdentifierType) {
+			IdentifierType i1 = (IdentifierType) t1;
+			IdentifierType i2 = (IdentifierType) t2;
+
+			Klass c = getKlass(i2.varID);
+			while (c != null && !rstack.contains(c.id)) {
+				rstack.push(c.id);
+				if (i1.varID.equals(c.getId())) {
+					rstack.clear();
+					return true;
+				} else {
+					if (c.parent() == null) {
+						rstack.clear();
+						return false;
+					}
+					c = getKlass(c.parent());
+				}
+			}
+			rstack.clear();
+		}
+		return false;
+	}
+
+	public boolean absCompTypes(Type t1, Type t2) {
+
+		if (t1 == null || t2 == null) {
+			return false;
+		}
+
+		if (t1 instanceof IntType && t2 instanceof IntType) {
+			return true;
+		}
+		if (t1 instanceof BooleanType && t2 instanceof BooleanType) {
+			return true;
+		}
+		if (t1 instanceof IntArrayType && t2 instanceof IntArrayType) {
+			return true;
+		}
+		if (t1 instanceof IdentifierType && t2 instanceof IdentifierType) {
+			IdentifierType i1 = (IdentifierType) t1;
+			IdentifierType i2 = (IdentifierType) t2;
+			if (i1.varID.equals(i2.varID)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
