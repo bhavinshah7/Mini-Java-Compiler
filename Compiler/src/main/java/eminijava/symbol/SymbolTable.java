@@ -8,6 +8,7 @@ import eminijava.ast.BooleanType;
 import eminijava.ast.IdentifierType;
 import eminijava.ast.IntArrayType;
 import eminijava.ast.IntType;
+import eminijava.ast.StringType;
 import eminijava.ast.Type;
 
 public class SymbolTable {
@@ -129,6 +130,9 @@ public class SymbolTable {
 		if (t1 instanceof BooleanType && t2 instanceof BooleanType) {
 			return true;
 		}
+		if (t1 instanceof StringType && t2 instanceof StringType) {
+			return true;
+		}
 		if (t1 instanceof IntArrayType && t2 instanceof IntArrayType) {
 			return true;
 		}
@@ -165,6 +169,9 @@ public class SymbolTable {
 			return true;
 		}
 		if (t1 instanceof BooleanType && t2 instanceof BooleanType) {
+			return true;
+		}
+		if (t1 instanceof StringType && t2 instanceof StringType) {
 			return true;
 		}
 		if (t1 instanceof IntArrayType && t2 instanceof IntArrayType) {

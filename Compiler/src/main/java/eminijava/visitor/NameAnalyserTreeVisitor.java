@@ -325,9 +325,6 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 
 		String id = vd.getId().getVarID();
 
-		// Variable var = symbolTable.getVar(currMethod, currClass, id);
-		// vd.getId().setB(var);
-
 		if (currMethod == null) {// Klass Variable
 
 			Klass parent = symbolTable.getKlass(currClass.parent());
@@ -345,9 +342,7 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 		/**
 		 * Note: argDeclaration already checked in buildSymbolTable
 		 */
-		/*
-		 * ad.getType().accept(this); ad.getId().accept(this);
-		 */
+
 		return null;
 	}
 
@@ -405,12 +400,9 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 		currClass = symbolTable.getKlass(id);
 		mc.getClassName().setB(currClass);
 
-		// currMethod = currClass.getMethod("main");
 		mc.getStringArrayId().accept(this);
 		mc.getStat().accept(this);
 
-		// currMethod = null;
-		// currClass = null;
 		return null;
 	}
 
