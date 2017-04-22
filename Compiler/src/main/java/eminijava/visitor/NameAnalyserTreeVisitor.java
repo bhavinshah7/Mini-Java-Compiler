@@ -220,7 +220,7 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 		if (klass == null) {
 			JSymbol sym = ni.getClassName().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "class " + id + " is not declared");
-		} // TODO: Main class cannot be used as a type
+		}
 
 		ni.getClassName().setB(klass);
 		return null;
@@ -297,7 +297,6 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 		if (klass == null) {
 			JSymbol sym = ref.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "class " + id + " is not declared");
-			// TODO: Main class cannot be used as a type
 		}
 
 		ref.setB(klass);

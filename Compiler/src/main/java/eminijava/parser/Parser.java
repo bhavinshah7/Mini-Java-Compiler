@@ -433,6 +433,7 @@ public class Parser {
 			eat(Token.LPAREN);
 			Expression argument = parseExpression();
 			eat(Token.RPAREN);
+			eat(Token.SEMICOLON);
 			Sidef sidef = new Sidef(jSymbol, argument);
 			return sidef;
 		}
@@ -638,21 +639,47 @@ public class Parser {
 		case TIMES: {
 			JSymbol timesSymbol = symbol;
 			eat(Token.TIMES);
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
+			Expression rhs = parseExpression();
 			Times times = new Times(timesSymbol, lhs, rhs);
-			return times;
+			/**
+			 * TIMES has higher preference than + and -
+			 */
+			Expression expr = parseTerm1(times);
+
+			return expr;
 		}
+
+		// case TIMES: {
+		// JSymbol timesSymbol = symbol;
+		// eat(Token.TIMES);
+		// Expression expr = parseExpression();
+		// Expression rhs = parseTerm1(expr);
+		// Times times = new Times(timesSymbol, lhs, rhs);
+		// return times;
+		// }
 		// break;
 
 		case DIV: {
 			JSymbol divSymbol = symbol;
 			eat(Token.DIV);
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
+			Expression rhs = parseExpression();
 			Division div = new Division(divSymbol, lhs, rhs);
-			return div;
+			/**
+			 * DIV has higher preference than + and -
+			 */
+			Expression expr = parseTerm1(div);
+
+			return expr;
 		}
+
+		// case DIV: {
+		// JSymbol divSymbol = symbol;
+		// eat(Token.DIV);
+		// Expression expr = parseExpression();
+		// Expression rhs = parseTerm1(expr);
+		// Division div = new Division(divSymbol, lhs, rhs);
+		// return div;
+		// }
 		// break;
 
 		case LBRACKET: {
@@ -688,6 +715,48 @@ public class Parser {
 
 		default:
 			throw new ParseException(symbol.getLine(), symbol.getColumn(), "Invalid token :" + symbol.token);
+
+		}
+
+	}
+
+	private int getPriority(Expression expr) {
+		switch (symbol.token) {
+
+		case AND: {
+			return 2;
+		}
+
+		case OR: {
+			return 1;
+		}
+
+		case EQUALS: {
+			return 3;
+		}
+
+		case LESSTHAN: {
+			return 3;
+		}
+
+		case PLUS: {
+			return 4;
+		}
+
+		case MINUS: {
+			return 4;
+		}
+
+		case TIMES: {
+			return 5;
+		}
+
+		case DIV: {
+			return 5;
+		}
+
+		default:
+			return 0;
 
 		}
 

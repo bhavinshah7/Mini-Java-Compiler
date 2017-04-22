@@ -34,4 +34,9 @@ public class IdentifierExpr extends Expression {
 		return v.visit(this);
 	}
 
+	@Override
+	public String toString() {
+		return varID;
+	}
+
 }

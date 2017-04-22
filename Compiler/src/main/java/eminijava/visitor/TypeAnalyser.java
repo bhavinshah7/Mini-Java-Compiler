@@ -1,6 +1,8 @@
 package eminijava.visitor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import eminijava.ast.And;
@@ -71,10 +73,18 @@ public class TypeAnalyser implements Visitor<Type> {
 	public Type visit(Print n) {
 
 		Type texp = n.expr.accept(this);
+		if (texp == null) {
+			/**
+			 * Note: Expression always has a Type. Null would signify an error
+			 * which has already been raised. Ignore from here on..
+			 */
+			return null;
+		}
 
 		if (!((texp instanceof IntType) || (texp instanceof BooleanType) || (texp instanceof StringType))) {
 			JSymbol sym = n.expr.getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + texp + " invalid in println statement");
+			addError(sym.getLine(), sym.getColumn(),
+					"The argument of System.out.println must be of Type int, boolean or String");
 		}
 		return null;
 	}
@@ -87,9 +97,12 @@ public class TypeAnalyser implements Visitor<Type> {
 
 		if (!st.compareTypes(lhs, rhs)) {
 			JSymbol sym = n.getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type mismatch in assignment");
+			if (lhs == null || rhs == null) {
+				addError(sym.getLine(), sym.getColumn(), "Incompatible types used with assignment Operator = ");
+			} else {
+				addError(sym.getLine(), sym.getColumn(), "Operator = cannot be applied to " + lhs + ", " + rhs);
+			}
 		}
-
 		return null;
 	}
 
@@ -163,85 +176,23 @@ public class TypeAnalyser implements Visitor<Type> {
 		return new IntType(n.getSymbol());
 	}
 
-	// @Override
-	// public Type visit(Plus n) {
-	// Type tlhs = n.getLhs().accept(this);
-	// Type trhs = n.getRhs().accept(this);
-	//
-	// if (tlhs == null || trhs == null) {
-	// if (tlhs == null) {
-	// JSymbol sym = n.getLhs().getSymbol();
-	// addError(sym.getLine(), sym.getColumn(), "Improper Type used with +
-	// operator");
-	// }
-	//
-	// if (trhs == null) {
-	// JSymbol sym = n.getRhs().getSymbol();
-	// addError(sym.getLine(), sym.getColumn(), "Improper Type used with +
-	// operator");
-	// }
-	//
-	// return new IntType(n.getSymbol());
-	// }
-	//
-	// if (tlhs instanceof IntType) {
-	// if (trhs instanceof IntType || trhs instanceof StringType) {
-	// return trhs;
-	// } else {
-	// JSymbol sym = n.getRhs().getSymbol();
-	// addError(sym.getLine(), sym.getColumn(), "Type " + trhs + " cannot be
-	// used with + operator");
-	// }
-	// } else if (tlhs instanceof StringType) {
-	// if (trhs instanceof IntType || trhs instanceof StringType) {
-	// return tlhs;
-	// } else {
-	// JSymbol sym = n.getRhs().getSymbol();
-	// addError(sym.getLine(), sym.getColumn(), "Type " + trhs + " cannot be
-	// used with + operator");
-	// }
-	// } else {
-	// JSymbol sym = n.getLhs().getSymbol();
-	// addError(sym.getLine(), sym.getColumn(), "Type " + tlhs + " cannot be
-	// used with + operator");
-	// }
-	//
-	// return new IntType(null);
-	// }
-
 	@Override
 	public Type visit(Minus n) {
 		Type lhs = n.getLhs().accept(this);
 		Type rhs = n.getRhs().accept(this);
 
 		if (lhs == null || rhs == null) { // Null
-			if (lhs == null) {
-				JSymbol sym = n.getLhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Improper Type used with - operator");
-			}
-
-			if (rhs == null) {
-				JSymbol sym = n.getRhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Improper Type used with - operator");
-			}
-			return new IntType(null);
-		} else if (lhs instanceof IntType && rhs instanceof IntType) {
-			// Correct Types
-			return lhs;
-		} else { // Incorrect Types
-
-			if (!(lhs instanceof IntType)) {
-				JSymbol sym = n.getLhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Type " + lhs + " cannot be used with - operator");
-			}
-
-			if (!(rhs instanceof IntType)) {
-				JSymbol sym = n.getRhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Type " + rhs + " cannot be used with - operator");
-			}
-
+			JSymbol sym = n.getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Improper Type used with - operator");
+			return new IntType(n.getSymbol());
 		}
-		return new IntType(null);
+
+		if (!(lhs instanceof IntType) || !(rhs instanceof IntType)) {
+			// Incorrect Types
+			JSymbol sym = n.getLhs().getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Operator - cannot be applied to " + lhs + ", " + rhs);
+		}
+		return new IntType(n.getSymbol());
 	}
 
 	@Override
@@ -250,33 +201,17 @@ public class TypeAnalyser implements Visitor<Type> {
 		Type rhs = n.getRhs().accept(this);
 
 		if (lhs == null || rhs == null) { // Null
-			if (lhs == null) {
-				JSymbol sym = n.getLhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Improper Type used with * operator");
-			}
-
-			if (rhs == null) {
-				JSymbol sym = n.getRhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Improper Type used with * operator");
-			}
-			return new IntType(null);
-		} else if (lhs instanceof IntType && rhs instanceof IntType) {
-			// Correct Types
-			return lhs;
-		} else { // Incorrect Types
-
-			if (!(lhs instanceof IntType)) {
-				JSymbol sym = n.getLhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Type " + lhs + " cannot be used with * operator");
-			}
-
-			if (!(rhs instanceof IntType)) {
-				JSymbol sym = n.getRhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Type " + rhs + " cannot be used with * operator");
-			}
-
+			JSymbol sym = n.getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Improper Type used with * operator");
+			return new IntType(n.getSymbol());
 		}
-		return new IntType(null);
+
+		if (!(lhs instanceof IntType) || !(rhs instanceof IntType)) {
+			// Incorrect Types
+			JSymbol sym = n.getLhs().getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Operator * cannot be applied to " + lhs + ", " + rhs);
+		}
+		return new IntType(n.getSymbol());
 	}
 
 	@Override
@@ -285,33 +220,17 @@ public class TypeAnalyser implements Visitor<Type> {
 		Type rhs = n.getRhs().accept(this);
 
 		if (lhs == null || rhs == null) { // Null
-			if (lhs == null) {
-				JSymbol sym = n.getLhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Improper Type used with / operator");
-			}
-
-			if (rhs == null) {
-				JSymbol sym = n.getRhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Improper Type used with / operator");
-			}
-			return new IntType(null);
-		} else if (lhs instanceof IntType && rhs instanceof IntType) {
-			// Correct Types
-			return lhs;
-		} else { // Incorrect Types
-
-			if (!(lhs instanceof IntType)) {
-				JSymbol sym = n.getLhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Type " + lhs + " cannot be used with / operator");
-			}
-
-			if (!(rhs instanceof IntType)) {
-				JSymbol sym = n.getRhs().getSymbol();
-				addError(sym.getLine(), sym.getColumn(), "Type " + rhs + " cannot be used with / operator");
-			}
-
+			JSymbol sym = n.getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Improper Type used with / operator");
+			return new IntType(n.getSymbol());
 		}
-		return new IntType(null);
+
+		if (!(lhs instanceof IntType) || !(rhs instanceof IntType)) {
+			// Incorrect Types
+			JSymbol sym = n.getLhs().getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Operator / cannot be applied to " + lhs + ", " + rhs);
+		}
+		return new IntType(n.getSymbol());
 	}
 
 	@Override
@@ -331,9 +250,9 @@ public class TypeAnalyser implements Visitor<Type> {
 
 		} else {
 			JSymbol sym = n.getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Incorrect types compared used with == oprator");
+			addError(sym.getLine(), sym.getColumn(), "Oprator == cannot be applied to " + t1 + ", " + t2);
 		}
-		return new BooleanType(null);
+		return new BooleanType(n.getSymbol());
 	}
 
 	@Override
@@ -345,14 +264,11 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (t1 == null || t2 == null) {
 			JSymbol sym = n.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Incorrect types used with < oprator");
-		} else if (!(t1 instanceof IntType)) {
-			JSymbol sym = n.getLhs().getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + t1 + " used with < oprator");
-		} else if (!(t2 instanceof IntType)) {
-			JSymbol sym = n.getRhs().getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + t2 + " used with < oprator");
+		} else if (!(t1 instanceof IntType) || !(t2 instanceof IntType)) {
+			JSymbol sym = n.getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Operator < cannot be applied to " + t1 + ", " + t2);
 		}
-		return new BooleanType(null);
+		return new BooleanType(n.getSymbol());
 	}
 
 	@Override
@@ -364,14 +280,11 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (t1 == null || t2 == null) {
 			JSymbol sym = n.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Incorrect types used with && oprator");
-		} else if (!(t1 instanceof BooleanType)) {
+		} else if (!(t1 instanceof BooleanType) || !(t2 instanceof BooleanType)) {
 			JSymbol sym = n.getLhs().getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + t1 + " used with && oprator");
-		} else if (!(t2 instanceof BooleanType)) {
-			JSymbol sym = n.getRhs().getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + t2 + " used with && oprator");
+			addError(sym.getLine(), sym.getColumn(), "Operator && cannot be applied to " + t1 + ", " + t2);
 		}
-		return new BooleanType(null);
+		return new BooleanType(n.getSymbol());
 	}
 
 	@Override
@@ -383,14 +296,11 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (t1 == null || t2 == null) {
 			JSymbol sym = n.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Incorrect types used with || oprator");
-		} else if (!(t1 instanceof BooleanType)) {
+		} else if (!(t1 instanceof BooleanType) || !(t2 instanceof BooleanType)) {
 			JSymbol sym = n.getLhs().getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + t1 + " used with || oprator");
-		} else if (!(t2 instanceof BooleanType)) {
-			JSymbol sym = n.getRhs().getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + t2 + " used with || oprator");
+			addError(sym.getLine(), sym.getColumn(), "Operator || cannot be applied to " + t1 + ", " + t2);
 		}
-		return new BooleanType(null);
+		return new BooleanType(n.getSymbol());
 	}
 
 	@Override
@@ -403,19 +313,19 @@ public class TypeAnalyser implements Visitor<Type> {
 			addError(sym.getLine(), sym.getColumn(), "Incorrect type used with ! oprator");
 		} else if (!(t1 instanceof BooleanType)) {
 			JSymbol sym = n.getExpr().getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "Type " + t1 + " used with ! oprator");
+			addError(sym.getLine(), sym.getColumn(), "Operator ! cannot be applied to " + t1);
 		}
-		return new BooleanType(null);
+		return new BooleanType(n.getSymbol());
 	}
 
 	@Override
 	public Type visit(True true1) {
-		return new BooleanType(null);
+		return new BooleanType(true1.getSymbol());
 	}
 
 	@Override
 	public Type visit(False false1) {
-		return new BooleanType(null);
+		return new BooleanType(false1.getSymbol());
 	}
 
 	@Override
@@ -433,15 +343,25 @@ public class TypeAnalyser implements Visitor<Type> {
 	}
 
 	@Override
-	public Type visit(NewArray newArray) {
-		// TODO Auto-generated method stub
-		return null;
+	public Type visit(NewArray na) {
+		Type tl = na.getArrayLength().accept(this);
+		if (tl == null || !(tl instanceof IntType)) {
+			JSymbol sym = na.getArrayLength().getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "Array length must be of type int");
+		}
+
+		return new IntArrayType(na.getSymbol());
 	}
 
 	@Override
-	public Type visit(NewInstance newInstance) {
-		// TODO Auto-generated method stub
-		return null;
+	public Type visit(NewInstance ni) {
+
+		Binding b = ni.getClassName().getB();
+		if (b != null) {
+			Klass klass = (Klass) b;
+			return klass.type();
+		}
+		return new IdentifierType(ni.getSymbol(), ni.getClassName().getVarID());
 	}
 
 	@Override
@@ -461,38 +381,59 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (m == null) {
 			JSymbol sym = mid.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Method " + mid + " not declared");
+			return null;
+		} else {
+			mid.setB(m);
+			checkCallArguments(cm, m);
+			return m.type();
 		}
-
-		mid.setB(m);
-
-		// Check arguments
-		checkCallArguments(cm, m);
-
-		return m.type();
 	}
 
 	private void checkCallArguments(CallMethod cm, Method m) {
 
-		// Check number of parameters
+		List<Type> argTypes = new ArrayList<>();
+		for (int i = 0; i < cm.getArgExprListSize(); i++) {
+			Type t2 = cm.getArgExprAt(i).accept(this);
+			argTypes.add(t2);
+		}
+
+		// Check number of arguments & parameters
 		if (cm.getArgExprListSize() != m.getParamsSize()) {
 			JSymbol sym = cm.getSymbol();
-			addError(sym.getLine(), sym.getColumn(), "The number of parameters must match the number of arguments");
+			addError(sym.getLine(), sym.getColumn(), "The method " + m.toString()
+					+ " is not applicable for the arguments (" + getArguments(argTypes) + ")");
 			return;
 		}
 
 		// Check argument types
-		for (int i = 0; i < cm.getArgExprListSize(); i++) {
+		for (int i = 0; i < argTypes.size(); i++) {
 			Variable var = m.getParamAt(i);
 			Type t1 = var.type();
-			Type t2 = cm.getArgExprAt(i).accept(this);
+			Type t2 = argTypes.get(i);
 
 			if (!st.compareTypes(t1, t2)) {
 				JSymbol sym = cm.getArgExprAt(i).getSymbol();
-				addError(sym.getLine(), sym.getColumn(),
-						"Type " + t2 + " of argument does not match type " + t1 + " of parameter");
+				addError(sym.getLine(), sym.getColumn(), "The method " + m.toString()
+						+ " is not applicable for the arguments (" + getArguments(argTypes) + ")");
+				return;
 			}
+
+		}
+	}
+
+	private String getArguments(List<Type> argList) {
+		if (argList == null || argList.size() == 0) {
+			return "";
 		}
 
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < argList.size(); i++) {
+			sb.append(argList.get(i));
+			if (i < argList.size() - 1) {
+				sb.append(", ");
+			}
+		}
+		return sb.toString();
 	}
 
 	@Override
@@ -538,20 +479,20 @@ public class TypeAnalyser implements Visitor<Type> {
 	}
 
 	@Override
-	public Type visit(VarDecl varDeclaration) {
-		return null;
+	public Type visit(VarDecl vd) {
+		return vd.getType();
 	}
 
 	@Override
-	public Type visit(ArgDecl argDeclaration) {
-		return null;
+	public Type visit(ArgDecl ad) {
+		return ad.getType();
 	}
 
 	private void checkOverriding(MethodDecl md, Method m) {
 		String p = currClass.parent();
 		Method pm = st.getMethod(m.getId(), p);
 		if (pm == null || pm.getParamsSize() != m.getParamsSize()) {
-			// No method overriding
+			// Overloaded method, Error caught in Name Analysis
 			return;
 		}
 
@@ -562,15 +503,16 @@ public class TypeAnalyser implements Visitor<Type> {
 			Type t2 = v.type();
 			if (!st.absCompTypes(t1, t2)) {
 				JSymbol sym = ad.getSymbol();
-				addError(sym.getLine(), sym.getColumn(),
-						"Type mismatch of parameter in the overriding and overridden methods");
+				addError(sym.getLine(), sym.getColumn(), "cannot override method " + pm.getId()
+						+ "; attempting to use incompatible type for parameter " + ad.getId());
+				return;
 			}
 		}
 
 		if (!st.absCompTypes(m.type(), pm.type())) {
 			JSymbol sym = md.getReturnType().getSymbol();
 			addError(sym.getLine(), sym.getColumn(),
-					"Return type " + m.type() + " must match type " + pm.type() + " in overridden method");
+					"cannot override method " + pm.getId() + "; attempting to use incompatible return type");
 		}
 	}
 
@@ -607,8 +549,6 @@ public class TypeAnalyser implements Visitor<Type> {
 	@Override
 	public Type visit(MainClass mc) {
 
-		// String id = mc.getClassName().getVarID();
-		// currClass = st.getKlass(id);
 		currClass = (Klass) mc.getClassName().getB();
 		mc.getStat().accept(this);
 		return null;
@@ -631,7 +571,6 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (b != null) {
 			return ((Variable) b).type();
 		}
-		// Type tid = st.getVarType(currMethod, currClass, id.getVarID());
 		return null;
 	}
 

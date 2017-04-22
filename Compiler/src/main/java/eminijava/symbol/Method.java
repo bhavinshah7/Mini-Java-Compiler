@@ -95,4 +95,20 @@ public class Method extends Binding {
 		return params.size();
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(id + "(");
+		for (int i = 0; i < getParamsSize(); i++) {
+			Variable v = params.get(i);
+			if (i == getParamsSize() - 1) {
+				sb.append(v.type());
+			} else {
+				sb.append(v.type() + ", ");
+			}
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+
 }

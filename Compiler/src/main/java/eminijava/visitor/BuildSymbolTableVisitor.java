@@ -419,6 +419,12 @@ public class BuildSymbolTableVisitor implements Visitor<Type> {
 			currClass = symbolTable.getKlass(id);
 		}
 
+		if (parent != null && parent.equals(mKlassId)) {
+			// TODO: This is a Hack!
+			JSymbol sym = classDeclExtends.getParent().getSymbol();
+			addError(sym.getLine(), sym.getColumn(), "class " + id + " cannot inherit main class");
+		}
+
 		for (int i = 0; i < classDeclExtends.getVarListSize(); i++) {
 			VarDecl vd = classDeclExtends.getVarDeclAt(i);
 			vd.accept(this);
