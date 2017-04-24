@@ -1,6 +1,6 @@
 # README #
 
-This aim of this project is to construct a compiler for  [Extended MiniJava](https://cs.rit.edu/~hh/teaching/doku.php?id=cc17:eminijava) language. The project is divided into different phases.
+This aim of this project is to construct a compiler for  [Extended MiniJava](https://www.cs.rit.edu/~hh/teaching/doku.php?id=cc17:eminijava) language. The project is divided into different phases.
 
 1. Lexical Analysis
 2. Syntax Analysis
