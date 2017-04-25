@@ -1,8 +1,9 @@
 # README #
 
-This aim of this project is to construct a compiler for  [Extended MiniJava](https://www.cs.rit.edu/~hh/teaching/doku.php?id=cc17:eminijava) language. The project is divided into different phases.
+This aim of this project is to construct a compiler for  [Extended MiniJava](https://cs.rit.edu/~hh/teaching/doku.php?id=cc17:eminijava) language. The compiler is being constructed in various logical phases. The phases are defined as follows: 
 
-1. Lexical Analysis
+1. Lexical Analysis: Separate a stream of characters into different tokens of the language which are described by using regular expressions.
+
 2. Syntax Analysis
 3. Name Analysis
 4. Type checking
@@ -29,12 +30,12 @@ emjc [options] <source file>
 
 As of now, there are six possible options. 
 
-––help: Prints a synopsis of options
-––pp: Pretty-prints the input file to the standard output
-––lex: Generates output from lexical analysis as described in Assignment 2.
-––ast: Generates output from syntactic analysis as described in Assignment 3.
-––name: Generates output from name analysis as described in Assignment 4
-––type: Generates output from type analysis
+* ––help: Prints a synopsis of options
+* ––pp: Pretty-prints the input file to the standard output
+* ––lex: Generates output from lexical analysis as described in Assignment 2.
+* ––ast: Generates output from syntactic analysis as described in Assignment 3.
+* ––name: Generates output from name analysis as described in Assignment 4
+* ––type: Generates output from type analysis
 
 After executing the compiler with the option ––type for the source file filename.emj the compiler either accepts the program as a good eMiniJava program with printing out the following line:
 
