@@ -352,7 +352,6 @@ public class Parser {
 			return null;
 			// Case Epsilon
 		}
-		// break;
 
 		default:
 			throw new ParseException(symbol.getLine(), symbol.getColumn(), "Invalid token :" + symbol.token);
@@ -375,7 +374,6 @@ public class Parser {
 			Block block = new Block(jSymbol, body);
 			return block;
 		}
-		// break;
 
 		case IF: {
 			JSymbol jSymbol = symbol;
@@ -392,7 +390,6 @@ public class Parser {
 			IfThenElse result = new IfThenElse(jSymbol, expr, then, elze);
 			return result;
 		}
-		// break;
 
 		case WHILE: {
 			JSymbol jSymbol = symbol;
@@ -404,7 +401,6 @@ public class Parser {
 			While result = new While(jSymbol, expr, body);
 			return result;
 		}
-		// break;
 
 		case PRINTLN: {
 			JSymbol jSymbol = symbol;
@@ -417,7 +413,6 @@ public class Parser {
 			Print result = new Print(jSymbol, expr);
 			return result;
 		}
-		// break;
 
 		case ID: {
 			Identifier id = new Identifier(symbol, (String) symbol.getValue());
@@ -425,7 +420,6 @@ public class Parser {
 			Statement stat = parseState1(id);
 			return stat;
 		}
-		// break;
 
 		case SIDEF: {
 			JSymbol jSymbol = symbol;
@@ -437,7 +431,6 @@ public class Parser {
 			Sidef sidef = new Sidef(jSymbol, argument);
 			return sidef;
 		}
-		// break;
 
 		default:
 			// System.err.println("parseStatement(): " + error());
@@ -488,7 +481,6 @@ public class Parser {
 			return expr;
 
 		}
-		// break;
 
 		case STRINGLIT: {
 			StringLiteral sl = new StringLiteral(symbol, (String) symbol.getValue());
@@ -496,7 +488,6 @@ public class Parser {
 			Expression expr = parseTerm1(sl);
 			return expr;
 		}
-		// break;
 
 		case TRUE: {
 			True true1 = new True(symbol);
@@ -504,7 +495,6 @@ public class Parser {
 			Expression expr = parseTerm1(true1);
 			return expr;
 		}
-		// break;
 
 		case FALSE: {
 			False false1 = new False(symbol);
@@ -512,7 +502,6 @@ public class Parser {
 			Expression expr = parseTerm1(false1);
 			return expr;
 		}
-		// break;
 
 		case ID: {
 			IdentifierExpr id = new IdentifierExpr(symbol, (String) symbol.getValue());
@@ -520,7 +509,6 @@ public class Parser {
 			Expression expr = parseTerm1(id);
 			return expr;
 		}
-		// break;
 
 		case THIS: {
 			This this1 = new This(symbol);
@@ -528,7 +516,6 @@ public class Parser {
 			Expression expr = parseTerm1(this1);
 			return expr;
 		}
-		// break;
 
 		case NEW: {
 			eat(Token.NEW);
@@ -537,7 +524,6 @@ public class Parser {
 			return result;
 
 		}
-		// break;
 
 		case BANG: {
 			JSymbol bangSymbol = symbol;
@@ -552,7 +538,6 @@ public class Parser {
 			return result;
 
 		}
-		// break;
 
 		case LPAREN: {
 			eat(Token.LPAREN);
@@ -564,7 +549,6 @@ public class Parser {
 			Expression result = parseTerm1(expr);
 			return result;
 		}
-		// break;
 
 		default:
 			throw new ParseException(symbol.getLine(), symbol.getColumn(), "Invalid token :" + symbol.token);
