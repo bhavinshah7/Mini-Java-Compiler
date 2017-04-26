@@ -1,7 +1,9 @@
 package eminijava.parser;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import eminijava.ast.And;
@@ -59,9 +61,13 @@ public class Parser {
 	private Lexer lexer;
 	// private Token token;
 	private JSymbol symbol;
+	private static final JSymbol SENTINEL = new JSymbol(Token.SENTINEL, 0, 0);
+	private Deque<JSymbol> stOperator = new ArrayDeque<JSymbol>();
+	private Deque<Expression> stOperand = new ArrayDeque<Expression>();
 
 	public Parser(Lexer lex) {
 		lexer = lex;
+		stOperator.push(SENTINEL);
 	}
 
 	public void advance() {
@@ -472,83 +478,96 @@ public class Parser {
 	}
 
 	public Expression parseExpression() throws ParseException {
+		parseExpr();
+		JSymbol top = stOperator.peek();
+		while (top.token != Token.SENTINEL) {
+			popOperator();
+			top = stOperator.peek();
+		}
+		return stOperand.pop();
+
+	}
+
+	private void parseExpr() throws ParseException {
 		switch (symbol.token) {
 
 		case INTLIT: {
 			IntLiteral lit = new IntLiteral(symbol, (Integer) symbol.getValue());
 			eat(Token.INTLIT);
-			Expression expr = parseTerm1(lit);
-			return expr;
-
+			stOperand.push(lit);
+			parseTerm1();
 		}
+			break;
 
 		case STRINGLIT: {
 			StringLiteral sl = new StringLiteral(symbol, (String) symbol.getValue());
 			eat(Token.STRINGLIT);
-			Expression expr = parseTerm1(sl);
-			return expr;
+			stOperand.push(sl);
+			parseTerm1();
 		}
+			break;
 
 		case TRUE: {
 			True true1 = new True(symbol);
 			eat(Token.TRUE);
-			Expression expr = parseTerm1(true1);
-			return expr;
+			stOperand.push(true1);
+			parseTerm1();
 		}
+			break;
 
 		case FALSE: {
 			False false1 = new False(symbol);
 			eat(Token.FALSE);
-			Expression expr = parseTerm1(false1);
-			return expr;
+			stOperand.push(false1);
+			parseTerm1();
 		}
+			break;
 
 		case ID: {
 			IdentifierExpr id = new IdentifierExpr(symbol, (String) symbol.getValue());
 			eat(Token.ID);
-			Expression expr = parseTerm1(id);
-			return expr;
+			stOperand.push(id);
+			parseTerm1();
 		}
+			break;
 
 		case THIS: {
 			This this1 = new This(symbol);
 			eat(Token.THIS);
-			Expression expr = parseTerm1(this1);
-			return expr;
+			stOperand.push(this1);
+			parseTerm1();
 		}
+			break;
 
 		case NEW: {
+			pushOperator(symbol);
 			eat(Token.NEW);
-			Expression expr = parseTerm2();
-			Expression result = parseTerm1(expr);
-			return result;
-
+			parseTerm2();
+			parseTerm1();
 		}
+			break;
 
 		case BANG: {
-			JSymbol bangSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.BANG);
-			Expression expr = parseExpression();
-			/*
-			 * Bang has the highest precedence! hence first apply bang to
-			 * rightmost expression.
-			 */
-			Not bang = new Not(bangSymbol, expr);
-			Expression result = parseTerm1(bang);
-			return result;
+			parseExpr();
+
+			// Not bang = new Not(bangSymbol, expr);
+			parseTerm1();
 
 		}
+			break;
 
 		case LPAREN: {
 			eat(Token.LPAREN);
+			stOperator.push(SENTINEL);
 			Expression expr = parseExpression();
 			eat(Token.RPAREN);
-			/**
-			 * Expression within parenthesis is given preference
-			 */
-			Expression result = parseTerm1(expr);
-			return result;
+			stOperand.push(expr);
+			stOperator.pop();
+			parseTerm1();
 		}
+			break;
 
 		default:
 			throw new ParseException(symbol.getLine(), symbol.getColumn(), "Invalid token :" + symbol.token);
@@ -556,146 +575,255 @@ public class Parser {
 		}
 	}
 
-	public Expression parseTerm1(Expression lhs) throws ParseException {
+	private void pushOperator(JSymbol current) {
+		JSymbol top = stOperator.peek();
+		while (getPriority(top.token) >= getPriority(current.token)) {
+			popOperator();
+			top = stOperator.peek();
+		}
+		stOperator.push(current);
+	}
+
+	private void popOperator() {
+
+		JSymbol top = stOperator.pop();
+		if (isBinary(top.token)) {
+			parseBinary(top);
+		} else {
+			parseUnary(top);
+		}
+
+	}
+
+	private void parseUnary(JSymbol sym) {
+		switch (sym.token) {
+		case BANG: {
+			Expression expr = stOperand.pop();
+			Not bang = new Not(sym, expr);
+			stOperand.push(bang);
+		}
+			break;
+		case NEW: {
+
+			Expression expr = stOperand.pop();
+
+			if (expr != null && expr instanceof IdentifierExpr) {
+				IdentifierExpr idExpr = (IdentifierExpr) expr;
+				NewInstance instance = new NewInstance(sym, idExpr);
+				stOperand.push(instance);
+			} else {
+				NewArray array = new NewArray(sym, expr);
+				stOperand.push(array);
+			}
+		}
+			break;
+		case LBRACKET: {
+			Expression indexExpr = stOperand.pop();
+			Expression ArrayExpr = stOperand.pop();
+			IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(), ArrayExpr, indexExpr);
+			stOperand.push(indexArray);
+		}
+			break;
+
+		default: {
+			System.err.println("parseUnary(): Error in parsing");
+		}
+			break;
+
+		}
+	}
+
+	private void parseBinary(JSymbol sym) {
+
+		switch (sym.token) {
+		case OR: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			Or or = new Or(sym, lhs, rhs);
+			stOperand.push(or);
+		}
+			break;
+		case AND: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			And and = new And(sym, lhs, rhs);
+			stOperand.push(and);
+		}
+			break;
+		case EQUALS: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			Equals equals = new Equals(sym, lhs, rhs);
+			stOperand.push(equals);
+		}
+			break;
+		case LESSTHAN: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			LessThan lessThan = new LessThan(sym, lhs, rhs);
+			stOperand.push(lessThan);
+		}
+			break;
+		case PLUS: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			Plus plus = new Plus(sym, lhs, rhs);
+			stOperand.push(plus);
+		}
+			break;
+		case MINUS: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			Minus minus = new Minus(sym, lhs, rhs);
+			stOperand.push(minus);
+		}
+			break;
+		case TIMES: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			Times times = new Times(sym, lhs, rhs);
+			stOperand.push(times);
+		}
+			break;
+		case DIV: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			Division div = new Division(sym, lhs, rhs);
+			stOperand.push(div);
+		}
+			break;
+		case DOT: {
+			Expression rhs = stOperand.pop();
+			Expression lhs = stOperand.pop();
+			if (rhs != null && rhs instanceof Length) {
+				Length length = (Length) rhs;
+				length.setArray(lhs);
+				stOperand.push(length);
+			} else if (rhs != null && rhs instanceof CallMethod) {
+				// method call
+				CallMethod cm = (CallMethod) rhs;
+				cm.setInstanceName(lhs);
+				stOperand.push(cm);
+			}
+
+		}
+			break;
+		default:
+			System.err.println("parseBinary(): Error in parsing");
+			// throw new ParseException(symbol.getLine(), symbol.getColumn(),
+			// "Invalid token :" + symbol.token);
+		}
+
+	}
+
+	public void parseTerm1() throws ParseException {
 		switch (symbol.token) {
 
 		case AND: {
-			JSymbol andSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.AND);
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
-			And and = new And(andSymbol, lhs, rhs);
-			return and;
+			parseExpr();
+			parseTerm1();
+
 		}
-		// break;
+			break;
 
 		case OR: {
-			JSymbol orSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.OR);
+			parseExpr();
+			parseTerm1();
 
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
-			Or or = new Or(orSymbol, lhs, rhs);
-			return or;
 		}
-		// break;
+			break;
 
 		case EQUALS: {
-			JSymbol eqSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.EQUALS);
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
-			Equals equals = new Equals(eqSymbol, lhs, rhs);
-			return equals;
+			parseExpr();
+			parseTerm1();
+
 		}
-		// break;
+			break;
 
 		case LESSTHAN: {
-			JSymbol ltSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.LESSTHAN);
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
-			LessThan lessThan = new LessThan(ltSymbol, lhs, rhs);
-			return lessThan;
+			parseExpr();
+			parseTerm1();
+
 		}
-		// break;
+			break;
 
 		case PLUS: {
-			JSymbol plusSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.PLUS);
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
-			Plus plus = new Plus(plusSymbol, lhs, rhs);
-			return plus;
+			parseExpr();
+			parseTerm1();
+
 		}
-		// break;
+			break;
 
 		case MINUS: {
-			JSymbol minusSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.MINUS);
-			Expression expr = parseExpression();
-			Expression rhs = parseTerm1(expr);
-			Minus minus = new Minus(minusSymbol, lhs, rhs);
-			return minus;
+			parseExpr();
+			parseTerm1();
+
 		}
-		// break;
+			break;
 
 		case TIMES: {
-			JSymbol timesSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.TIMES);
-			Expression rhs = parseExpression();
-			Times times = new Times(timesSymbol, lhs, rhs);
-			/**
-			 * TIMES has higher preference than + and -
-			 */
-			Expression expr = parseTerm1(times);
+			parseExpr();
+			parseTerm1();
 
-			return expr;
 		}
-
-		// case TIMES: {
-		// JSymbol timesSymbol = symbol;
-		// eat(Token.TIMES);
-		// Expression expr = parseExpression();
-		// Expression rhs = parseTerm1(expr);
-		// Times times = new Times(timesSymbol, lhs, rhs);
-		// return times;
-		// }
-		// break;
+			break;
 
 		case DIV: {
-			JSymbol divSymbol = symbol;
+			pushOperator(symbol);
 			eat(Token.DIV);
-			Expression rhs = parseExpression();
-			Division div = new Division(divSymbol, lhs, rhs);
-			/**
-			 * DIV has higher preference than + and -
-			 */
-			Expression expr = parseTerm1(div);
+			parseExpr();
+			parseTerm1();
 
-			return expr;
 		}
-
-		// case DIV: {
-		// JSymbol divSymbol = symbol;
-		// eat(Token.DIV);
-		// Expression expr = parseExpression();
-		// Expression rhs = parseTerm1(expr);
-		// Division div = new Division(divSymbol, lhs, rhs);
-		// return div;
-		// }
-		// break;
+			break;
 
 		case LBRACKET: {
-			JSymbol lbSymbol = symbol;
 			eat(Token.LBRACKET);
-			Expression index = parseExpression();
+			stOperator.push(SENTINEL);
+			Expression indexExpr = parseExpression();
 			eat(Token.RBRACKET);
+			stOperator.pop(); // Pop SENTINEAL
+			// Expression ArrayExpr = stOperand.pop(); // Pop ArrayExpr
+			// IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(),
+			// ArrayExpr, indexExpr);
+			// stOperand.push(indexArray);
+			// parseTerm1();
 
-			IndexArray indexArray = new IndexArray(lbSymbol, lhs, index);
-			Expression result = parseTerm1(indexArray);
+			stOperand.push(indexExpr);
+			parseTerm1();
 
-			return result;
 		}
-		// break;
+			break;
 
 		case DOT: {
+			pushOperator(symbol);
 			eat(Token.DOT);
-			Expression expr = parseTerm3(lhs);
-			// TODO: Check the precedence here
-			Expression result = parseTerm1(expr);
-			return result;
+			parseTerm3();
+			parseTerm1();
 		}
-		// break;
+			break;
 
 		case RPAREN:
 		case SEMICOLON:
 		case COMMA:
 		case RBRACKET: {
-			return lhs;
-			// TODO: Epsilon expected, Check 3:41 & 3.42 Quicksort
+			// Epsilon expected
 		}
-		// break;
+			break;
 
 		default:
 			throw new ParseException(symbol.getLine(), symbol.getColumn(), "Invalid token :" + symbol.token);
@@ -704,17 +832,48 @@ public class Parser {
 
 	}
 
-	private int getPriority(Expression expr) {
-		switch (symbol.token) {
+	private boolean isBinary(Token operator) {
+		switch (operator) {
 
-		case AND: {
-			return 2;
+		case OR:
+		case AND:
+		case EQUALS:
+		case LESSTHAN:
+		case PLUS:
+		case MINUS:
+		case TIMES:
+		case DIV:
+		case DOT: {
+			return true;
+		}
+
+		case BANG:
+		case NEW:
+		case LBRACKET: {
+			return false;
+		}
+
+		default:
+			return false;
+
+		}
+	}
+
+	private int getPriority(Token operator) {
+		switch (operator) {
+
+		case SENTINEL: {
+			return -1;
 		}
 
 		case OR: {
 			return 1;
 		}
 
+		case AND: {
+			return 2;
+		}
+
 		case EQUALS: {
 			return 3;
 		}
@@ -737,6 +896,22 @@ public class Parser {
 
 		case DIV: {
 			return 5;
+		}
+
+		case BANG: {
+			return 6;
+		}
+
+		case LBRACKET: {
+			return 7;
+		}
+
+		case DOT: {
+			return 8;
+		}
+
+		case NEW: {
+			return 9;
 		}
 
 		default:
@@ -746,28 +921,34 @@ public class Parser {
 
 	}
 
-	public Expression parseTerm2() throws ParseException {
+	public void parseTerm2() throws ParseException {
 		switch (symbol.token) {
 
 		case INT: {
 			eat(Token.INT);
 			eat(Token.LBRACKET);
+			stOperator.push(SENTINEL);
 			Expression arrayLength = parseExpression();
 			eat(Token.RBRACKET);
-			NewArray array = new NewArray(arrayLength.getSymbol(), arrayLength);
-			return array;
+			stOperator.pop(); // pop SENTINEAL
+			// stOperator.pop(); // pop NEW
+			// NewArray array = new NewArray(arrayLength.getSymbol(),
+			// arrayLength);
+			// stOperand.push(array);
+			stOperand.push(arrayLength);
 		}
-		// break;
+			break;
 
 		case ID: {
-			IdentifierExpr id = new IdentifierExpr(symbol, (String) symbol.getValue());
+			IdentifierExpr idExpr = new IdentifierExpr(symbol, (String) symbol.getValue());
 			eat(Token.ID);
 			eat(Token.LPAREN);
 			eat(Token.RPAREN);
-			NewInstance instance = new NewInstance(id.getSymbol(), id);
-			return instance;
+			// stOperator.pop(); // pop NEW
+			// NewInstance instance = new NewInstance(id.getSymbol(), id);
+			stOperand.push(idExpr);
 		}
-		// break;
+			break;
 
 		default:
 			throw new ParseException(symbol.getLine(), symbol.getColumn(), "Invalid token :" + symbol.token);
@@ -775,21 +956,24 @@ public class Parser {
 		}
 	}
 
-	public Expression parseTerm3(Expression lhs) throws ParseException {
+	public void parseTerm3() throws ParseException {
 		switch (symbol.token) {
 
 		case LENGTH: {
-			Length length = new Length(symbol, lhs);
+			Length length = new Length(symbol, null);
 			eat(Token.LENGTH);
-			return length;
+			stOperand.push(length);
 		}
-		// break;
+			break;
 
 		case ID: {
 			IdentifierExpr methodId = new IdentifierExpr(symbol, (String) symbol.getValue());
 			eat(Token.ID);
 			eat(Token.LPAREN);
+
+			stOperator.push(SENTINEL);
 			List<Expression> exprList = new ArrayList<Expression>();
+
 			if (symbol.token != Token.RPAREN) {
 				Expression exprArg = parseExpression();
 				exprList.add(exprArg);
@@ -800,10 +984,11 @@ public class Parser {
 				}
 			}
 			eat(Token.RPAREN);
-			CallMethod callMethod = new CallMethod(methodId.getSymbol(), lhs, methodId, exprList);
-			return callMethod;
+			stOperator.pop(); // Pop SENTINEL
+			CallMethod callMethod = new CallMethod(methodId.getSymbol(), null, methodId, exprList);
+			stOperand.push(callMethod);
 		}
-		// break;
+			break;
 
 		default:
 			throw new ParseException(symbol.getLine(), symbol.getColumn(), "Invalid token :" + symbol.token);
