@@ -604,26 +604,20 @@ public class Parser {
 		}
 			break;
 		case NEW: {
-
 			Expression expr = stOperand.pop();
-
-			if (expr != null && expr instanceof IdentifierExpr) {
-				IdentifierExpr idExpr = (IdentifierExpr) expr;
-				NewInstance instance = new NewInstance(sym, idExpr);
-				stOperand.push(instance);
-			} else {
-				NewArray array = new NewArray(sym, expr);
-				stOperand.push(array);
-			}
+			IdentifierExpr idExpr = (IdentifierExpr) expr;
+			NewInstance instance = new NewInstance(sym, idExpr);
+			stOperand.push(instance);
 		}
 			break;
-		case LBRACKET: {
-			Expression indexExpr = stOperand.pop();
-			Expression ArrayExpr = stOperand.pop();
-			IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(), ArrayExpr, indexExpr);
-			stOperand.push(indexArray);
-		}
-			break;
+		// case LBRACKET: {
+		// Expression indexExpr = stOperand.pop();
+		// Expression ArrayExpr = stOperand.pop();
+		// IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(),
+		// ArrayExpr, indexExpr);
+		// stOperand.push(indexArray);
+		// }
+		// break;
 
 		default: {
 			System.err.println("parseUnary(): Error in parsing");
@@ -797,13 +791,11 @@ public class Parser {
 			Expression indexExpr = parseExpression();
 			eat(Token.RBRACKET);
 			stOperator.pop(); // Pop SENTINEAL
-			// Expression ArrayExpr = stOperand.pop(); // Pop ArrayExpr
-			// IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(),
-			// ArrayExpr, indexExpr);
-			// stOperand.push(indexArray);
-			// parseTerm1();
 
-			stOperand.push(indexExpr);
+			Expression ArrayExpr = stOperand.pop();
+			IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(), ArrayExpr, indexExpr);
+			stOperand.push(indexArray);
+
 			parseTerm1();
 
 		}
@@ -931,11 +923,15 @@ public class Parser {
 			Expression arrayLength = parseExpression();
 			eat(Token.RBRACKET);
 			stOperator.pop(); // pop SENTINEAL
-			// stOperator.pop(); // pop NEW
-			// NewArray array = new NewArray(arrayLength.getSymbol(),
-			// arrayLength);
-			// stOperand.push(array);
-			stOperand.push(arrayLength);
+			/*
+			 * Note: New keyword has highest priority, and We cannot decide
+			 * between new instance and new Array using new operator and
+			 * IdentifierExpr from respective stack.
+			 */
+
+			stOperator.pop(); // pop NEW
+			NewArray array = new NewArray(arrayLength.getSymbol(), arrayLength);
+			stOperand.push(array);
 		}
 			break;
 

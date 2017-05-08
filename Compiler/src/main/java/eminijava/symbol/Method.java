@@ -10,13 +10,14 @@ import eminijava.semantics.Binding;
 public class Method extends Binding {
 
 	String id;
-	Type type;
+	// Type type;
 	Vector<Variable> params;
 	Hashtable<String, Variable> vars;
 
 	public Method(String id, Type type) {
+		super(type);
 		this.id = id;
-		this.type = type;
+		// this.type = type;
 		vars = new Hashtable<>();
 		params = new Vector<>();
 	}
@@ -25,6 +26,7 @@ public class Method extends Binding {
 		return id;
 	}
 
+	@Override
 	public Type type() {
 		return type;
 	}
@@ -93,22 +95,6 @@ public class Method extends Binding {
 
 	public int getParamsSize() {
 		return params.size();
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(id + "(");
-		for (int i = 0; i < getParamsSize(); i++) {
-			Variable v = params.get(i);
-			if (i == getParamsSize() - 1) {
-				sb.append(v.type());
-			} else {
-				sb.append(v.type() + ", ");
-			}
-		}
-		sb.append(")");
-		return sb.toString();
 	}
 
 }

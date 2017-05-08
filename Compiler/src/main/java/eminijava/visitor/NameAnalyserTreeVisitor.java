@@ -341,6 +341,8 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 		/**
 		 * Note: argDeclaration already checked in buildSymbolTable
 		 */
+		// ad.getType().accept(this);
+		ad.getId().accept(this);
 
 		return null;
 	}
@@ -372,10 +374,10 @@ public class NameAnalyserTreeVisitor implements Visitor<Type> {
 		 * Note: argDeclaration already checked in buildSymbolTable
 		 */
 
-		/*
-		 * for (int i = 0; i < md.getArgListSize(); i++) { ArgDeclaration ad =
-		 * md.getArgDeclAt(i); ad.accept(this); }
-		 */
+		for (int i = 0; i < md.getArgListSize(); i++) {
+			ArgDecl ad = md.getArgDeclAt(i);
+			ad.accept(this);
+		}
 
 		for (int i = 0; i < md.getVarListSize(); i++) {
 			VarDecl vd = md.getVarDeclAt(i);
