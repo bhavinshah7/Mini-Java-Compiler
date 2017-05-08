@@ -13,18 +13,20 @@ public class Klass extends Binding {
 	Hashtable<String, Method> methods;
 	Hashtable<String, Variable> globals;
 	String parent;
-	Type type;
+	// Type type;
 
 	public Klass(String id, String p) {
+		super(new IdentifierType(null, id));
 		this.id = id;
 		parent = p;
-		type = new IdentifierType(null, id);
+		// type = new IdentifierType(null, id);
 		methods = new Hashtable<>();
 		globals = new Hashtable<>();
 	}
 
-	public Klass() {
-	}
+	/*
+	 * public Klass() { super(new IdentifierType(null, null)); }
+	 */
 
 	public String getId() {
 		return id;

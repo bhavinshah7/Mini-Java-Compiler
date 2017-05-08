@@ -1,5 +1,15 @@
+# Output directories #
+######################
 /bin/
 /target/
+
+# Intermediate files #
+######################
+*.emj
+*.lexed
+*.ast
+*.j
+
 # Compiled source #
 ###################
 *.com

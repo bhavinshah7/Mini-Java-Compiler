@@ -85,6 +85,8 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.expr.getSymbol();
 			addError(sym.getLine(), sym.getColumn(),
 					"The argument of System.out.println must be of Type int, boolean or String");
+		} else {
+			n.expr.setType(texp);
 		}
 		return null;
 	}
@@ -102,7 +104,11 @@ public class TypeAnalyser implements Visitor<Type> {
 			} else {
 				addError(sym.getLine(), sym.getColumn(), "Operator = cannot be applied to " + lhs + ", " + rhs);
 			}
+
+		} else {
+			n.expr.setType(rhs);
 		}
+
 		return null;
 	}
 
@@ -127,6 +133,8 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (!(texp instanceof BooleanType)) {
 			JSymbol sym = n.expr.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Expression must be of type boolean");
+		} else {
+			n.expr.setType(texp);
 		}
 
 		n.then.accept(this);
@@ -141,6 +149,8 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (!(texp instanceof BooleanType)) {
 			JSymbol sym = n.expr.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Expression must be of type boolean");
+		} else {
+			n.expr.setType(texp);
 		}
 
 		n.body.accept(this);
@@ -150,7 +160,9 @@ public class TypeAnalyser implements Visitor<Type> {
 
 	@Override
 	public Type visit(IntLiteral n) {
-		return new IntType(n.getSymbol());
+		Type t = new IntType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -166,14 +178,18 @@ public class TypeAnalyser implements Visitor<Type> {
 		}
 
 		if (tlhs instanceof IntType) {
+			n.setType(trhs);
 			return trhs;
 		}
 
 		if (tlhs instanceof StringType) {
+			n.setType(tlhs);
 			return tlhs;
 		}
 
-		return new IntType(n.getSymbol());
+		Type t = new IntType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -192,7 +208,10 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.getLhs().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Operator - cannot be applied to " + lhs + ", " + rhs);
 		}
-		return new IntType(n.getSymbol());
+
+		Type t = new IntType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -211,7 +230,10 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.getLhs().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Operator * cannot be applied to " + lhs + ", " + rhs);
 		}
-		return new IntType(n.getSymbol());
+
+		Type t = new IntType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -230,7 +252,9 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.getLhs().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Operator / cannot be applied to " + lhs + ", " + rhs);
 		}
-		return new IntType(n.getSymbol());
+		Type t = new IntType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -247,7 +271,7 @@ public class TypeAnalyser implements Visitor<Type> {
 				|| (t1 instanceof StringType && t2 instanceof StringType)
 				|| (t1 instanceof IntArrayType && t2 instanceof IntArrayType)
 				|| (t1 instanceof IdentifierType && t2 instanceof IdentifierType)) {
-
+			n.setType(t1);
 		} else {
 			JSymbol sym = n.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Oprator == cannot be applied to " + t1 + ", " + t2);
@@ -268,7 +292,9 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Operator < cannot be applied to " + t1 + ", " + t2);
 		}
-		return new BooleanType(n.getSymbol());
+		Type t = new BooleanType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -284,7 +310,9 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.getLhs().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Operator && cannot be applied to " + t1 + ", " + t2);
 		}
-		return new BooleanType(n.getSymbol());
+		Type t = new BooleanType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -300,7 +328,9 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.getLhs().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Operator || cannot be applied to " + t1 + ", " + t2);
 		}
-		return new BooleanType(n.getSymbol());
+		Type t = new BooleanType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
@@ -315,30 +345,39 @@ public class TypeAnalyser implements Visitor<Type> {
 			JSymbol sym = n.getExpr().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Operator ! cannot be applied to " + t1);
 		}
-		return new BooleanType(n.getSymbol());
+		Type t = new BooleanType(n.getSymbol());
+		n.setType(t);
+		return t;
 	}
 
 	@Override
 	public Type visit(True true1) {
-		return new BooleanType(true1.getSymbol());
+		Type t = new BooleanType(true1.getSymbol());
+		true1.setType(t);
+		return t;
 	}
 
 	@Override
 	public Type visit(False false1) {
-		return new BooleanType(false1.getSymbol());
+		Type t = new BooleanType(false1.getSymbol());
+		false1.setType(t);
+		return t;
 	}
 
 	@Override
 	public Type visit(IdentifierExpr i) {
 		Binding b = i.getB();
 		if (b != null) {
-			return ((Variable) b).type();
+			Type t = ((Variable) b).type();
+			i.setType(t);
+			return t;
 		}
 		return null;
 	}
 
 	@Override
 	public Type visit(This this1) {
+		this1.setType(currClass.type());
 		return currClass.type();
 	}
 
@@ -350,7 +389,9 @@ public class TypeAnalyser implements Visitor<Type> {
 			addError(sym.getLine(), sym.getColumn(), "Array length must be of type int");
 		}
 
-		return new IntArrayType(na.getSymbol());
+		Type t = new IntArrayType(na.getSymbol());
+		na.setType(t);
+		return t;
 	}
 
 	@Override
@@ -359,6 +400,7 @@ public class TypeAnalyser implements Visitor<Type> {
 		Binding b = ni.getClassName().getB();
 		if (b != null) {
 			Klass klass = (Klass) b;
+			ni.setType(klass.type());
 			return klass.type();
 		}
 		return new IdentifierType(ni.getSymbol(), ni.getClassName().getVarID());
@@ -385,6 +427,7 @@ public class TypeAnalyser implements Visitor<Type> {
 		} else {
 			mid.setB(m);
 			checkCallArguments(cm, m);
+			cm.setType(m.type());
 			return m.type();
 		}
 	}
@@ -443,8 +486,13 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (t == null || !(t instanceof IntArrayType)) {
 			JSymbol sym = length.getArray().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Identifier must be of Type int[]");
+		} else {
+			length.getArray().setType(t);
 		}
-		return new IntType(length.getSymbol());
+
+		Type type = new IntType(length.getSymbol());
+		length.setType(type);
+		return type;
 	}
 
 	@Override
@@ -542,6 +590,7 @@ public class TypeAnalyser implements Visitor<Type> {
 			addError(sym.getLine(), sym.getColumn(), "Method " + id + " must return a result of Type " + t1);
 		}
 
+		md.getReturnExpr().setType(t2);
 		currMethod = null;
 		return md.getReturnType();
 	}
@@ -581,6 +630,8 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (tid == null || !(tid instanceof IntArrayType)) {
 			JSymbol sym = ia.getArray().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Array expression must evaluate to be of Type int[]");
+		} else {
+			ia.getArray().setType(tid);
 		}
 
 		// Check index type
@@ -588,9 +639,13 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (tin == null || !(tin instanceof IntType)) {
 			JSymbol sym = ia.getIndex().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Index expression must evaluate to be of Type int");
+		} else {
+			ia.getIndex().setType(tin);
 		}
 
-		return new IntType(null);
+		Type t = new IntType(ia.getSymbol());
+		ia.setType(t);
+		return t;
 	}
 
 	@Override
@@ -607,6 +662,8 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (texp1 == null || !(texp1 instanceof IntType)) {
 			JSymbol sym = aa.getE1().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Expression must be of Type int");
+		} else {
+			aa.getE1().setType(texp1);
 		}
 
 		// Check assigned expression type
@@ -614,6 +671,8 @@ public class TypeAnalyser implements Visitor<Type> {
 		if (texp2 == null || !(texp2 instanceof IntType)) {
 			JSymbol sym = aa.getE2().getSymbol();
 			addError(sym.getLine(), sym.getColumn(), "Expression must be of Type int");
+		} else {
+			aa.getE2().setType(texp2);
 		}
 
 		return null;
@@ -621,7 +680,9 @@ public class TypeAnalyser implements Visitor<Type> {
 
 	@Override
 	public Type visit(StringLiteral stringLiteral) {
-		return new StringType(null);
+		Type t = new StringType(stringLiteral.getSymbol());
+		stringLiteral.setType(t);
+		return t;
 	}
 
 	@Override
