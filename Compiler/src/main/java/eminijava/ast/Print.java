@@ -20,6 +20,10 @@ public class Print extends Statement {
 		return expr;
 	}
 
+	public void setExpr(Expression expr) {
+		this.expr = expr;
+	}
+
 	@Override
 	public <R> R accept(Visitor<R> v) {
 		return v.visit(this);

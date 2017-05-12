@@ -1,6 +1,8 @@
 package eminijava.visitor;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.PrintWriter;
 
 import eminijava.ast.And;
@@ -42,14 +44,19 @@ import eminijava.ast.StringLiteral;
 import eminijava.ast.StringType;
 import eminijava.ast.This;
 import eminijava.ast.Times;
+import eminijava.ast.Tree;
 import eminijava.ast.True;
 import eminijava.ast.Type;
 import eminijava.ast.VarDecl;
 import eminijava.ast.Visitor;
 import eminijava.ast.While;
+import eminijava.lexer.Lexer;
+import eminijava.parser.ParseException;
+import eminijava.parser.Parser;
 import eminijava.semantics.Binding;
 import eminijava.symbol.Klass;
 import eminijava.symbol.Method;
+import eminijava.symbol.SymbolTable;
 import eminijava.symbol.Variable;
 import jasmin.Main;
 
@@ -619,14 +626,20 @@ public class CodeGenerator implements Visitor<String> {
 	public String visit(Identifier id) {
 		Binding b = id.getB();
 		int lvIndex = getLocalVarIndex(b);
+		StringBuilder sb = new StringBuilder();
 		if (lvIndex == -1) {
-			StringBuilder sb = new StringBuilder();
+
 			sb.append("aload_0" + "\n");
 			sb.append("getfield " + currClass.getId() + "/" + id.getVarID() + " " + b.type().accept(this) + "\n");
-			return sb.toString();
+
 		} else {
-			return "iload " + lvIndex;
+			if (b.type() instanceof IntType || b.type() instanceof BooleanType) {
+				sb.append("iload " + lvIndex + "\n");
+			} else {
+				sb.append("aload " + lvIndex + "\n");
+			}
 		}
+		return sb.toString();
 	}
 
 	@Override
@@ -738,5 +751,21 @@ public class CodeGenerator implements Visitor<String> {
 
 	private int getNextLabel() {
 		return ++labelCount;
+	}
+
+	public static void generateCode(File file, String dirPath) throws FileNotFoundException, ParseException {
+		Lexer lexer = new Lexer(new FileReader(file));
+		Parser p = new Parser(lexer);
+		Tree tree = p.parse();
+		BuildSymbolTableVisitor b = new BuildSymbolTableVisitor();
+		b.visit((Program) tree);
+		SymbolTable st = b.getSymTab();
+		NameAnalyserTreeVisitor natv = new NameAnalyserTreeVisitor(st);
+		natv.visit((Program) tree);
+		TypeAnalyser ta = new TypeAnalyser(st);
+		ta.visit((Program) tree);
+		CodeGenerator cg = new CodeGenerator(dirPath);
+		cg.visit((Program) tree);
+
 	}
 }

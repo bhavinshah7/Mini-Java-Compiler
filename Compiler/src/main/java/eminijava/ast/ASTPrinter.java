@@ -1,5 +1,13 @@
 package eminijava.ast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
+import eminijava.lexer.Lexer;
+import eminijava.parser.ParseException;
+import eminijava.parser.Parser;
+
 public class ASTPrinter implements Visitor<String> {
 
 	int level = 0;
@@ -288,26 +296,6 @@ public class ASTPrinter implements Visitor<String> {
 		return "(STRINGLIT " + stringLiteral.value + ")";
 	}
 
-	// @Override
-	// public String visit(ClassDecl classDecl) {
-	// StringBuilder sb = new StringBuilder();
-	// sb.append("(CLASS-DECL " + classDecl.id.accept(this));
-	// if (classDecl.parent != null) {
-	// sb.append(" EXTENDS " + classDecl.parent.accept(this));
-	// }
-	// sb.append("\n");
-	// incLevel();
-	// for (VarDecl var : classDecl.varList) {
-	// sb.append(var.accept(this) + "\n");
-	// }
-	// for (MethodDecl method : classDecl.methodList) { //
-	// sb.append(method.accept(this) + "\n");
-	// }
-	// decLevel();
-	// sb.append(")");
-	// return sb.toString();
-	// }
-
 	@Override
 	public String visit(ClassDeclSimple classDeclSimple) {
 		StringBuilder sb = new StringBuilder();
@@ -341,6 +329,15 @@ public class ASTPrinter implements Visitor<String> {
 		decLevel();
 		sb.append(")");
 		return sb.toString();
+	}
+
+	public static String printFileAst(File file) throws FileNotFoundException, ParseException {
+		ASTPrinter printer = new ASTPrinter();
+		Lexer lexer = new Lexer(new FileReader(file));
+		Parser p = new Parser(lexer);
+		Tree tree = p.parse();
+		return printer.visit((Program) tree);
+
 	}
 
 }
