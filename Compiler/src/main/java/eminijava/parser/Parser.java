@@ -478,13 +478,23 @@ public class Parser {
 	}
 
 	public Expression parseExpression() throws ParseException {
-		parseExpr();
-		JSymbol top = stOperator.peek();
-		while (top.token != Token.SENTINEL) {
-			popOperator();
-			top = stOperator.peek();
+
+		try {
+
+			parseExpr();
+			JSymbol top = stOperator.peek();
+			while (top.token != Token.SENTINEL) {
+				popOperator();
+				top = stOperator.peek();
+			}
+			return stOperand.pop();
+
+		} catch (ParseException pe) {
+			throw pe;
+		} catch (Exception e) {
+			System.err.println("Parser Error " + symbol.getLine() + ":" + symbol.getColumn());
+			throw e;
 		}
-		return stOperand.pop();
 
 	}
 
@@ -610,14 +620,6 @@ public class Parser {
 			stOperand.push(instance);
 		}
 			break;
-		// case LBRACKET: {
-		// Expression indexExpr = stOperand.pop();
-		// Expression ArrayExpr = stOperand.pop();
-		// IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(),
-		// ArrayExpr, indexExpr);
-		// stOperand.push(indexArray);
-		// }
-		// break;
 
 		default: {
 			System.err.println("parseUnary(): Error in parsing");
@@ -700,6 +702,14 @@ public class Parser {
 				stOperand.push(cm);
 			}
 
+		}
+			break;
+
+		case LBRACKET: {
+			Expression indexExpr = stOperand.pop();
+			Expression ArrayExpr = stOperand.pop();
+			IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(), ArrayExpr, indexExpr);
+			stOperand.push(indexArray);
 		}
 			break;
 		default:
@@ -786,15 +796,18 @@ public class Parser {
 			break;
 
 		case LBRACKET: {
+			pushOperator(symbol);
 			eat(Token.LBRACKET);
 			stOperator.push(SENTINEL);
 			Expression indexExpr = parseExpression();
 			eat(Token.RBRACKET);
 			stOperator.pop(); // Pop SENTINEAL
 
-			Expression ArrayExpr = stOperand.pop();
-			IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(), ArrayExpr, indexExpr);
-			stOperand.push(indexArray);
+			// Expression ArrayExpr = stOperand.pop();
+			// IndexArray indexArray = new IndexArray(ArrayExpr.getSymbol(),
+			// ArrayExpr, indexExpr);
+			// stOperand.push(indexArray);
+			stOperand.push(indexExpr);
 
 			parseTerm1();
 
@@ -835,13 +848,13 @@ public class Parser {
 		case MINUS:
 		case TIMES:
 		case DIV:
-		case DOT: {
+		case DOT:
+		case LBRACKET: {
 			return true;
 		}
 
 		case BANG:
-		case NEW:
-		case LBRACKET: {
+		case NEW: {
 			return false;
 		}
 

@@ -1,6 +1,7 @@
 package eminijava.ast;
 
 import eminijava.lexer.JSymbol;
+import eminijava.visitor.IBranchVisitor;
 
 public abstract class Expression extends Tree {
 
@@ -17,4 +18,6 @@ public abstract class Expression extends Tree {
 	public void setType(Type t) {
 		type = t;
 	}
+
+	public abstract <R> R accept(IBranchVisitor<R> v, String nTrue, String nFalse);
 };

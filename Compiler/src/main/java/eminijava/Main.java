@@ -15,9 +15,13 @@ import eminijava.parser.Parser;
 import eminijava.semantics.NameError;
 import eminijava.semantics.SemanticErrors;
 import eminijava.symbol.SymbolTable;
+import eminijava.visitor.BranchGenerator;
 import eminijava.visitor.BuildSymbolTableVisitor;
 import eminijava.visitor.CodeGenerator;
+import eminijava.visitor.CodeGenerator2;
+import eminijava.visitor.ConstantFolding;
 import eminijava.visitor.NameAnalyserTreeVisitor;
+import eminijava.visitor.StatementFolding;
 import eminijava.visitor.TreePrinter;
 import eminijava.visitor.TypeAnalyser;
 
@@ -59,12 +63,132 @@ public class Main {
 			main.codeGen(argv);
 		}
 			break;
+		case "--opt": {
+			main.optCodeGen(argv);
+		}
+			break;
+
+		case "--optinfo": {
+			main.optinfo(argv);
+		}
+			break;
 		default: {
 			System.err.println("Invalid option " + argv[0]);
 		}
 
 		}
 
+	}
+
+	public void optinfo(String argv[]) {
+		for (int i = 1; i < argv.length; i++) {
+			try {
+
+				if (!isFileValid(argv[i])) {
+					continue;
+				}
+
+				Lexer lexer = new Lexer(new FileReader(argv[i]));
+				Parser p = new Parser(lexer);
+				Tree tree = p.parse();
+
+				if (tree != null) {
+					BuildSymbolTableVisitor bstv = new BuildSymbolTableVisitor();
+					bstv.visit((Program) tree);
+
+					SymbolTable st = bstv.getSymTab();
+					NameAnalyserTreeVisitor natv = new NameAnalyserTreeVisitor(st);
+					natv.visit((Program) tree);
+
+					TypeAnalyser ta = new TypeAnalyser(st);
+					ta.visit((Program) tree);
+
+					if (SemanticErrors.errorList.size() == 0) {
+
+						String path = getFileDirPath(argv[i]);
+						CodeGenerator cg = new CodeGenerator(path);
+						cg.visit((Program) tree);
+						int len = cg.getLen();
+
+						ConstantFolding.optimize(tree);
+						StatementFolding.optimize(tree);
+						CodeGenerator2 optCg = new CodeGenerator2(path);
+						BranchGenerator bg = new BranchGenerator(optCg);
+						optCg.setBG(bg);
+						optCg.visit((Program) tree);
+						int optLen = optCg.getLen();
+						optLen += bg.getLen();
+
+						System.out.println("#bytecode before optimization: " + len);
+						System.out.println("#bytecode after optimization: " + optLen);
+					}
+				}
+			} catch (ParseException e) {
+				System.err.println(e.getMessage());
+				System.exit(1);
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			} finally {
+				if (SemanticErrors.errorList.size() != 0) {
+					SemanticErrors.sort();
+					for (NameError e : SemanticErrors.errorList) {
+						System.err.println(e);
+					}
+				}
+			}
+		}
+	}
+
+	public void optCodeGen(String argv[]) {
+		for (int i = 1; i < argv.length; i++) {
+			try {
+
+				if (!isFileValid(argv[i])) {
+					continue;
+				}
+
+				Lexer lexer = new Lexer(new FileReader(argv[i]));
+				Parser p = new Parser(lexer);
+				Tree tree = p.parse();
+
+				if (tree != null) {
+					BuildSymbolTableVisitor bstv = new BuildSymbolTableVisitor();
+					bstv.visit((Program) tree);
+
+					SymbolTable st = bstv.getSymTab();
+					NameAnalyserTreeVisitor natv = new NameAnalyserTreeVisitor(st);
+					natv.visit((Program) tree);
+
+					TypeAnalyser ta = new TypeAnalyser(st);
+					ta.visit((Program) tree);
+
+					ConstantFolding.optimize(tree);
+					StatementFolding.optimize(tree);
+
+					if (SemanticErrors.errorList.size() == 0) {
+						String path = getFileDirPath(argv[i]);
+						CodeGenerator2 cg = new CodeGenerator2(path);
+						BranchGenerator bg = new BranchGenerator(cg);
+						cg.setBG(bg);
+						cg.visit((Program) tree);
+					}
+				}
+			} catch (ParseException e) {
+				System.err.println(e.getMessage());
+				System.exit(1);
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			} finally {
+				if (SemanticErrors.errorList.size() != 0) {
+					SemanticErrors.sort();
+					for (NameError e : SemanticErrors.errorList) {
+						System.err.println(e);
+					}
+				}
+			}
+		}
 	}
 
 	public void codeGen(String argv[]) {

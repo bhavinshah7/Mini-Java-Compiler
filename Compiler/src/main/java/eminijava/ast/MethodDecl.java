@@ -81,6 +81,12 @@ public class MethodDecl extends Tree {
 		return null;
 	}
 
+	public void setStatAt(int index, Statement stat) {
+		if (index < statList.size()) {
+			statList.set(index, stat);
+		}
+	}
+
 	@Override
 	public <R> R accept(Visitor<R> v) {
 		return v.visit(this);

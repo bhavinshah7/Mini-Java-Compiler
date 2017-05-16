@@ -1,6 +1,7 @@
 package eminijava.ast;
 
 import eminijava.lexer.JSymbol;
+import eminijava.visitor.IBranchVisitor;
 
 public class NewInstance extends Expression {
 
@@ -22,5 +23,10 @@ public class NewInstance extends Expression {
 	@Override
 	public <R> R accept(Visitor<R> v) {
 		return v.visit(this);
+	}
+
+	@Override
+	public <R> R accept(IBranchVisitor<R> v, String nTrue, String nFalse) {
+		return v.visit(this, nTrue, nFalse);
 	}
 }
