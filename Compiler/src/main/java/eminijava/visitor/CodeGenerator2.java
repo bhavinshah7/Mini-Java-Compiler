@@ -60,7 +60,7 @@ import eminijava.symbol.SymbolTable;
 import eminijava.symbol.Variable;
 import jasmin.Main;
 
-public class CodeGenerator implements Visitor<String> {
+public class CodeGenerator2 implements Visitor<String> {
 
 	private Klass currClass;
 	private Method currMethod;
@@ -68,19 +68,22 @@ public class CodeGenerator implements Visitor<String> {
 	private int labelCount;
 	private final String PATH;
 	private int bytecode;
+	BranchGenerator bg;
 	public static final String LABEL = "Label";
 
-	public CodeGenerator(String progPath) {
+	public CodeGenerator2(String progPath) {
 		PATH = progPath;
+	}
+
+	public void setBG(BranchGenerator branchG) {
+		bg = branchG;
 	}
 
 	@Override
 	public String visit(Print n) {
 		StringBuilder sb = new StringBuilder();
-		// sb.append("; println method" + "\n");
 		sb.append("getstatic java/lang/System/out Ljava/io/PrintStream;" + "\n");
 		sb.append(n.getExpr().accept(this) + "\n");
-
 		sb.append("invokevirtual java/io/PrintStream/println(");
 		sb.append(n.getExpr().type().accept(this));
 		sb.append(")V" + "\n");
@@ -92,7 +95,6 @@ public class CodeGenerator implements Visitor<String> {
 	@Override
 	public String visit(Assign n) {
 		StringBuilder sb = new StringBuilder();
-		// sb.append("; assignment" + "\n");
 
 		Binding b = n.getId().getB();
 		int lvIndex = getLocalVarIndex(b);
@@ -136,13 +138,13 @@ public class CodeGenerator implements Visitor<String> {
 	public String visit(IfThenElse n) {
 
 		StringBuilder sb = new StringBuilder();
+		String nTrue = LABEL + getNextLabel();
 		String nFalse = LABEL + getNextLabel();
 		String nAfter = LABEL + getNextLabel();
 
-		// sb.append("; if statement" + "\n");
-		sb.append(n.getExpr().accept(this) + "\n");
+		sb.append(n.getExpr().accept(bg, nTrue, nFalse));
 
-		sb.append("ifeq " + nFalse + "\n");
+		sb.append(nTrue + ":" + "\n");
 		sb.append(n.getThen().accept(this) + "\n");
 		sb.append("goto " + nAfter + "\n");
 
@@ -157,26 +159,20 @@ public class CodeGenerator implements Visitor<String> {
 	@Override
 	public String visit(While n) {
 
-		/*
-		 * while (cond)stmtK =
-		 *
-		 * goto(nStart) nStmt: JstmtK nStart: JcondK ifneq(nStmt)
-		 */
-
 		StringBuilder sb = new StringBuilder();
-		// sb.append(";" + "\n");
-		// sb.append("; while statement" + "\n");
-		// sb.append(";" + "\n");
-		String nStart = LABEL + getNextLabel();
-		String nStmt = LABEL + getNextLabel();
-		sb.append("goto " + nStart + "\n");
-		sb.append(nStmt + ":" + "\n");
+
+		String nTest = LABEL + getNextLabel();
+		String nBody = LABEL + getNextLabel();
+		String nExit = LABEL + getNextLabel();
+
+		sb.append(nTest + ":" + "\n");
+		sb.append(n.getExpr().accept(bg, nBody, nExit) + "\n");
+
+		sb.append(nBody + ":" + "\n");
 		sb.append(n.getBody().accept(this) + "\n");
-		sb.append(nStart + ":" + "\n");
-		sb.append(n.getExpr().accept(this) + "\n");
-		// sb.append("iconst_0" + "\n");
-		sb.append("ifne " + nStmt + "\n");
-		// sb.append("; end of while" + "\n");
+		sb.append("goto " + nTest + "\n");
+
+		sb.append(nExit + ":" + "\n");
 
 		bytecode += 4;
 		return sb.toString();
@@ -437,6 +433,7 @@ public class CodeGenerator implements Visitor<String> {
 		StringBuilder sb = new StringBuilder();
 		sb.append(na.getArrayLength().accept(this) + "\n");
 		sb.append("newarray int" + "\n");
+
 		bytecode += 1;
 		return sb.toString();
 	}
@@ -447,6 +444,7 @@ public class CodeGenerator implements Visitor<String> {
 		sb.append("new " + ni.getClassName() + "\n");
 		sb.append("dup" + "\n");
 		sb.append("invokespecial " + ni.getClassName() + "/<init>()V" + "\n");
+
 		bytecode += 3;
 		return sb.toString();
 	}
@@ -754,7 +752,7 @@ public class CodeGenerator implements Visitor<String> {
 			sb.append(md.accept(this) + "\n");
 		}
 
-		bytecode += 5;
+		bytecode += 7;
 		return sb.toString();
 	}
 
@@ -827,7 +825,7 @@ public class CodeGenerator implements Visitor<String> {
 		natv.visit((Program) tree);
 		TypeAnalyser ta = new TypeAnalyser(st);
 		ta.visit((Program) tree);
-		CodeGenerator cg = new CodeGenerator(dirPath);
+		CodeGenerator2 cg = new CodeGenerator2(dirPath);
 		cg.visit((Program) tree);
 
 	}

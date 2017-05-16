@@ -3,6 +3,7 @@ package eminijava.ast;
 import java.util.List;
 
 import eminijava.lexer.JSymbol;
+import eminijava.visitor.IBranchVisitor;
 
 public class CallMethod extends Expression {
 
@@ -47,6 +48,11 @@ public class CallMethod extends Expression {
 	@Override
 	public <R> R accept(Visitor<R> v) {
 		return v.visit(this);
+	}
+
+	@Override
+	public <R> R accept(IBranchVisitor<R> v, String nTrue, String nFalse) {
+		return v.visit(this, nTrue, nFalse);
 	}
 
 }

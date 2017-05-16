@@ -23,6 +23,12 @@ public class Block extends Statement {
 		return null;
 	}
 
+	public void setStatAt(int index, Statement stat) {
+		if (index < body.size()) {
+			body.set(index, stat);
+		}
+	}
+
 	@Override
 	public <R> R accept(Visitor<R> v) {
 		return v.visit(this);

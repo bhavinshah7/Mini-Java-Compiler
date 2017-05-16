@@ -2,6 +2,7 @@ package eminijava.ast;
 
 import eminijava.lexer.JSymbol;
 import eminijava.semantics.Binding;
+import eminijava.visitor.IBranchVisitor;
 
 public class IdentifierExpr extends Expression {
 
@@ -37,6 +38,11 @@ public class IdentifierExpr extends Expression {
 	@Override
 	public String toString() {
 		return varID;
+	}
+
+	@Override
+	public <R> R accept(IBranchVisitor<R> v, String nTrue, String nFalse) {
+		return v.visit(this, nTrue, nFalse);
 	}
 
 }
